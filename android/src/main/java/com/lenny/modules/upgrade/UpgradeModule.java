@@ -45,6 +45,7 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
     private final int DOWNLOADFAIL = 77;
     private int contentLength;//要下载文件的大小
     private  ProgressDataReceiver progressReceiver;
+    private String filePath;
     private Handler handler = new Handler(Looper.getMainLooper()){
 
         public void handleMessage(Message msg) {
@@ -58,8 +59,10 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
                     break;
                 case DOWNLOADFINISHED://下载完成后进行的操作
                     sendReceiver("0002", contentLength + "", contentLength);
-                    showToast("下载成功，跳转安装...");
-                    InstallAPK((String) msg.obj);
+                    getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                            .emit("showInstallDialog","");
+//                    showToast("下载成功，跳转安装...");
+//                    InstallAPK((String) msg.obj);
                     break;
                 case DOWNLOADFAIL:
                     showToast("访问服务器失败");
@@ -91,19 +94,22 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
         handler.removeCallbacksAndMessages(null);
     }
 
+
     @ReactMethod
     public void startDownLoad(final String downloadUrl,String version, String fileName) {
         if (!isSDcardExist()) {
-            showToast("SD卡不存在，下载失败");
+//            showToast("SD卡不存在，下载失败");
             return;
         }
 //        final String downloadUrl = "http://www.online-cmcc.com/gfms/app/apk/4GTraffic2MM.apk";
-        final String filePath = getDownloadPath() + File.separator +fileName+".apk";
+        filePath = getDownloadPath() + File.separator +fileName+".apk";
         if (fileIsExists(filePath) && isLastVersion(filePath, version)) {
-            InstallAPK(filePath);
+//            InstallAPK(filePath);
+            getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                    .emit("showInstallDialog","");
             return;
         }
-        showToast("下载开始");
+//        showToast("下载开始");
         new Thread(){
             private InputStream inputStream;
             private FileOutputStream fos;
@@ -229,7 +235,8 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
         return  false;
     }
 
-    private void InstallAPK(String filePath){
+    @ReactMethod
+    public void InstallAPK(){
         Intent i = new Intent(Intent.ACTION_VIEW);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         i.setDataAndType(Uri.parse("file://" + filePath),"application/vnd.android.package-archive");
@@ -256,7 +263,7 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
                 params.putString("downSize", intent.getStringExtra("currLength"));
                 params.putInt("fileSize", intent.getIntExtra("fileLength", 0));
                 getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                        .emit("progress", params);;
+                        .emit("progress", params);
             }
         }
     }
