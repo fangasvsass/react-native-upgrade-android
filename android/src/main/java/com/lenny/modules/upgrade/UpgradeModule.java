@@ -77,7 +77,7 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
         FileDownloader.setup(getReactApplicationContext());
         FileDownloader.setGlobalPost2UIInterval(1000);
         filePath = getDownloadPath() + File.separator + fileName + ".apk";
-        FileDownloader.getImpl().create(downloadUrl)
+        FileDownloader.getImpl().create(downloadUrl).setWifiRequired(true)
                 .setPath(filePath)
                 .setListener(new FileDownloadListener() {
                     @Override

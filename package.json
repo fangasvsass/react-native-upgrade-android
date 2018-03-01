@@ -1,6 +1,6 @@
 {
-  "name": "react-native-upgrade-android",
-  "version": "0.0.1",
+  "name": "react-native-letote-upgrade-android",
+  "version": "0.0.5",
   "description": "A third-party library for updating the version",
   "main": "index.js",
   "scripts": {
