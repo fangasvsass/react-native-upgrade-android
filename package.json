@@ -1,6 +1,6 @@
 {
   "name": "react-native-upgrade-android",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A third-party library for updating the version",
   "main": "index.js",
   "scripts": {
