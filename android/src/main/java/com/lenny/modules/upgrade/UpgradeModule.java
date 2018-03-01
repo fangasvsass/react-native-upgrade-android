@@ -58,6 +58,7 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
     public String getName() {
         return "UpgradeModule";
     }
+
     /**
      * Android 运行时权限
      */
@@ -71,7 +72,7 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void startDownLoad(final String downloadUrl, String fileName) {
+    public void startDownLoad(final String downloadUrl, final String versionCode, String fileName) {
         checkPermission();
         FileDownloader.setup(getReactApplicationContext());
         FileDownloader.setGlobalPost2UIInterval(1000);
@@ -101,7 +102,7 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
 
                     @Override
                     protected void completed(BaseDownloadTask task) {
-                        if(isLastVersion(filePath)) {
+                        if (isLastVersion(Integer.parseInt(versionCode))) {
                             getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                                     .emit("showInstallDialog", "");
                         }
@@ -129,24 +130,19 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
     }
 
 
-
-    private boolean isLastVersion(String filePath) {
+    private boolean isLastVersion(int versionCode) {
         PackageManager pm = getReactApplicationContext().getPackageManager();
-        PackageInfo info = pm.getPackageArchiveInfo(filePath, PackageManager.GET_ACTIVITIES);
-        if (info != null) {
-            int code = info.versionCode;
-            try {
-                int appCode = pm.getPackageInfo(getReactApplicationContext().getPackageName(), 0).versionCode;
-                if (code > appCode ) {
-                    return true;
-                }
-            } catch (PackageManager.NameNotFoundException e) {
-                return false;
+        try {
+            int appCode = pm.getPackageInfo(getReactApplicationContext().getPackageName(), 0).versionCode;
+            if (versionCode > appCode) {
+                return true;
             }
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
         }
         return false;
     }
-    
+
 
     @ReactMethod
     public void InstallAPK() {
