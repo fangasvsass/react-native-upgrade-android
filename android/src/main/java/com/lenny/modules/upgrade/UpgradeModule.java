@@ -20,6 +20,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -47,18 +48,18 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
     private String filePath;
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE};
-
+    Manifest.permission.READ_EXTERNAL_STORAGE,
+    Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    
     public UpgradeModule(ReactApplicationContext reactContext) {
         super(reactContext);
     }
-
+    
     @Override
     public String getName() {
         return "UpgradeModule";
     }
-
+    
     /**
      * Android 运行时权限
      */
@@ -66,70 +67,70 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
         int permission = ActivityCompat.checkSelfPermission(getReactApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getCurrentActivity(), PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
+                                              REQUEST_EXTERNAL_STORAGE
+                                              );
         }
     }
-
+    
     @ReactMethod
-    public void startDownLoad(final String downloadUrl, final String versionCode, String fileName) {
+    public void startDownLoad(final String downloadUrl, final String versionCode, String fileName, final Promise promise) {
         checkPermission();
         FileDownloader.setup(getReactApplicationContext());
         FileDownloader.setGlobalPost2UIInterval(1000);
         filePath = getDownloadPath() + File.separator + fileName + ".apk";
         FileDownloader.getImpl().create(downloadUrl).setWifiRequired(true)
-                .setPath(filePath)
-                .setListener(new FileDownloadListener() {
-                    @Override
-                    protected void pending(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-                    }
-
-                    @Override
-                    protected void connected(BaseDownloadTask task, String etag, boolean isContinue, int soFarBytes, int totalBytes) {
-                    }
-
-                    @Override
-                    protected void progress(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-                    }
-
-                    @Override
-                    protected void blockComplete(BaseDownloadTask task) {
-                    }
-
-                    @Override
-                    protected void retry(final BaseDownloadTask task, final Throwable ex, final int retryingTimes, final int soFarBytes) {
-                    }
-
-                    @Override
-                    protected void completed(BaseDownloadTask task) {
-                        if (isLastVersion(Integer.parseInt(versionCode))) {
-                            getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                                    .emit("showInstallDialog", "");
-                        }
-
-                    }
-
-                    @Override
-                    protected void paused(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-                    }
-
-                    @Override
-                    protected void error(BaseDownloadTask task, Throwable e) {
-                        e.printStackTrace();
-                    }
-
-                    @Override
-                    protected void warn(BaseDownloadTask task) {
-                    }
-                }).start();
+        .setPath(filePath)
+        .setListener(new FileDownloadListener() {
+            @Override
+            protected void pending(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+            }
+            
+            @Override
+            protected void connected(BaseDownloadTask task, String etag, boolean isContinue, int soFarBytes, int totalBytes) {
+            }
+            
+            @Override
+            protected void progress(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+            }
+            
+            @Override
+            protected void blockComplete(BaseDownloadTask task) {
+            }
+            
+            @Override
+            protected void retry(final BaseDownloadTask task, final Throwable ex, final int retryingTimes, final int soFarBytes) {
+            }
+            
+            @Override
+            protected void completed(BaseDownloadTask task) {
+                if (isLastVersion(Integer.parseInt(versionCode))) {
+                    WritableMap param = Arguments.createMap();
+                    promise.resolve(param);
+                }
+                
+            }
+            
+            @Override
+            protected void paused(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+            }
+            
+            @Override
+            protected void error(BaseDownloadTask task, Throwable e) {
+                e.printStackTrace();
+            }
+            
+            @Override
+            protected void warn(BaseDownloadTask task) {
+            }
+        }).start();
     }
-
-
+    
+    
     private String getDownloadPath() {
         return Environment.getExternalStorageDirectory().getAbsolutePath();
     }
-
-
+    
+    
     private boolean isLastVersion(int versionCode) {
         PackageManager pm = getReactApplicationContext().getPackageManager();
         try {
@@ -142,15 +143,16 @@ public class UpgradeModule extends ReactContextBaseJavaModule {
         }
         return false;
     }
-
-
+    
+    
     @ReactMethod
-    public void InstallAPK() {
+    public void installAPK() {
         Intent i = new Intent(Intent.ACTION_VIEW);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         i.setDataAndType(Uri.parse("file://" + filePath), "application/vnd.android.package-archive");
         getReactApplicationContext().startActivity(i);
     }
-
-
+    
+    
 }
+
